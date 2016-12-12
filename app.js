@@ -14,6 +14,9 @@ var train = "";
 var destination = "";
 var frequency = 0;
 var firstTrain = "";
+var tMinutesTillTrain = "";
+var nextTrain = "";
+
 
 // First Time (pushed back 1 year to make sure it comes before current time)
 var firstTimeConverted = moment(firstTrain, "hh:mm").subtract(1, "years");
@@ -41,7 +44,6 @@ console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
 
 // read data from firebase if it exists
 // get values from inputs
-// push data to firebase
 $(document).on('ready', function() {
 	$('#submit').on('click', function () {
 		train = $('#inputTrain').val().trim();
@@ -54,49 +56,28 @@ $(document).on('ready', function() {
         destination : destination,
         frequency: frequency,
         firstTrain: firstTrain,
-        nextTrain: firebase.database.ServerValue.TIMESTAMP
-    });
+        nextTrain: firebase.database.ServerValue,
+        tMinutesTillTrain: firebase.database.ServerValue
 
-    $('#inputTrain').val('');
-    $('#inputDest').val('');
-    $('#inputFirst').val('');
-    $('#inputFreq').val('');
+    });
 
     return false;
 	});
 
 });
 
-  database.ref().on("child_added", function(childSnapshot) {
+  database.ref().orderByChild("timestamp").limitToLast(10).on("child_added", function(childSnapshot, prevChildKey) {
     var firstTrain = childSnapshot.val().firstTrain;
     var tableRow = $('<tr>');
     var trainCell = $('<td>').text(childSnapshot.val().train);
     var destinationCell = $('<td>').text(childSnapshot.val().destination);
-    var frequencyCell = $('<td>').text(childSnapshot).val().frequency;
+    var frequencyCell = $('<td>').text(childSnapshot.val().frequency);
     var firstTrainCell = $('<td>').text(firstTrain);
+    var nextTrainCell = $('<td>').text(childSnapshot.val().nextTrain);
+    var tMinutesTillTrainCell = $('<td>').text(childSnapshot.val().tMinutesTillTrain);
 
-    tableRow.append(trainCell).append(destinationCell).append(firstTrainCell)
-            .append(firstTrainCell);
+    tableRow.append(trainCell).append(destinationCell).append(frequencyCell).append(nextTrainCell).append(tMinutesTillTrainCell);
     $('tbody').append(tableRow);
-  });
+    });
 
-  database.ref().orderByChild("frequency").limitToLast(1).on("child_added", function(snapshot) {
-    $('#mostRecenttrain').text('train: ' + snapshot.val().train);
-    $('#mostRecentdestination').text('destination: ' + snapshot.val().destination);
-    $('#mostRecentfirstTrain').text('First train: ' + snapshot.val().firstTrain);
-  });
-
-  database.ref().orderByChild("dateAdded").limitToLast(1).on("child_added", function(snapshot) {
-    $('#mostRecentInputtrain').text('train: ' + snapshot.val().train);
-    $('#mostRecentInputdestination').text('destination: ' + snapshot.val().destination);
-    $('#mostRecentInputFrequency').text('frequency: ' + moment(snapshot.val().frequency).format("MMMM Do YYYY"));
-    $('#mostRecentInputfirstTrain').text('first train: ' + snapshot.val().firstTrain);
-  });
-// clear data from form fields
-// update DOM with user data
-//only displays 10 trains
-
-database.ref().orderByChild('timestamp').limitToLast(10).on('child_added', function(childSnapshot, prevChildKey) {
-    
-});
-
+  
